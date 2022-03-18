@@ -18,8 +18,8 @@ class App:
         super().__init__()
         # создаю приложение и провожу настройки
         self.app = QApplication(sys.argv)
-        QFontDatabase.addApplicationFont(config.FONT_PATH)
-        self.app.setFont(QFont( config.FONT_NAME , config.FONT_SIZE))
+        # QFontDatabase.addApplicationFont(config.FONT_PATH)
+        # self.app.setFont(QFont( config.FONT_NAME , config.FONT_SIZE))
         screen_width, screen_height = self._get_screen_size()
         # разрешение монитора
         self.screen_size = (screen_width, screen_height)

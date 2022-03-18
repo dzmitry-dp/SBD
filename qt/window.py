@@ -1,13 +1,15 @@
 import sys
+from datetime import datetime, date
 from functools import partial
 from loguru import logger
-from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QComboBox
+from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QComboBox, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import Qt, QPropertyAnimation
 from PyQt5.QtGui import QIcon
 
 import config
 from qt.elements import QtButtonElements
 from qt.logic import MainButtonsClick
+from db.procurement import ProcurementDataBaseQuery
 
 btn_click_logic = MainButtonsClick()
 
@@ -109,6 +111,7 @@ class QtMainWindow(QWidget, QtButtonElements):
             self._exit_btn[1].setStyleSheet("QPushButton"
                                   "{"
                                   "color: red;"
+                                  "font-size:40px;"
                                   "}")
             for btn in self._exit_btn:
                 btn.resize(*config.MAIN_MENU_BTN_SIZE)
@@ -139,140 +142,183 @@ class QtProcurementTableWindow(QWidget):
         logger.info('class QtTableWindow')
         super().__init__()
         self.screen_size = screen_size
-        self.table_window_size = self._calculation_table_window_size()
-        self.center_screen_point = (int(screen_size[0]/2), int(screen_size[1]/2))
-        self.start_point = self._location_table_window_on_screen(self.table_window_size[0], self.table_window_size[1])
-        
+        self.procurement_table_window_size = self._calculation_procurement_table_window_size()
+
+        self.current_width_point = 0 # переменная в которую записываю координату ширины, где должен начинаться новый виджет
+        self.current_heigth_point = config.ID_INPUT_HEIGTH # переменная в которую записываю координату высоты, где должен начинаться новый виджет
         # создаем элементы которые заполняет пользователь
-        # procurement_input = ((id_input_widget, id_input), ...)
         self.procurement_input = self._create_input_pricurement_line()
+        self.table = self._create_table()
+        self.table.show()
 
         self._init_window()
 
     def _init_window(self):
-        width , heigth = self.table_window_size
-        x, y = self.start_point
+        width, heigth = self.procurement_table_window_size
+        start_point = self._location_table_window_on_screen(self.procurement_table_window_size[0], self.procurement_table_window_size[1])
+        x, y = start_point
         self.setGeometry(x, y, width, heigth)
         self.setWindowTitle('Закупки - A+props')
         self.setWindowIcon(QIcon('.\\static\\procurement.png'))
         self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint) # делаю не активной кнопку 'развернуть'
-
-        # актуализируем элеменнты ввода данных
-        for raw in self.procurement_input:
-            for qt_element in raw:
-                qt_element.show()
+        self.setFocus()
 
     def _location_table_window_on_screen(self, width, heigth):
         "Вычисление центральной точки окна для объекта расположенного внутри этого окна"
-        x = int(self.center_screen_point[0] - width/2)
-        y = int(self.center_screen_point[1] - heigth/2)
+        center_screen_point = (int(self.screen_size[0]/2), int(self.screen_size[1]/2))
+        x = int(center_screen_point[0] - width/2)
+        y = int(center_screen_point[1] - heigth/2)
         return x, y
     
-    def _calculation_table_window_size(self):
+    def _calculation_procurement_table_window_size(self):
         "Расчитываю размер окна таблицы Закупки - A+props"
         return int(self.screen_size[0] * config.PROCENT_OF_WINDOW), int(self.screen_size[1] * config.PROCENT_OF_WINDOW)
 
     def _create_input_pricurement_line(self):
+        "Последовательно создаем элементы для ввода данных. Каждый новый элемент отталкивается от координат предыдущего элемента"
+        start_point = (0, 0)
+        window_width = self.procurement_table_window_size[0]
+
         def _create_id_input():
+            width = int(window_width*config.ID_PERCENT_OF_WIDTH)
+            heigth = config.ID_INPUT_HEIGTH
+
             id_input_widget = QLabel(self)
-            id_input_widget.resize(*config.ID_INPUT_SIZE)
-            id_input_widget.move(*config.ID_INPUT_POSITION)
+            id_input_widget.resize(width, heigth)
+            id_input_widget.move(start_point[0], start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             id_input = QLineEdit(self)
             id_input.setMaxLength(config.ID_MAX_SYMBOLS)
-            id_input.resize(*config.ID_INPUT_SIZE)
+            id_input.resize(width, heigth)
             id_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
-            id_input.move(*config.ID_INPUT_POSITION)
+            id_input.setPlaceholderText("Id")
+            id_input.move(start_point[0], start_point[1])
             # id_input.setStyleSheet("background: transparent; border: none;")
             # id_input.setFocus()
+            # id_input.clearFocus()
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='Id')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return id_input_widget, id_input
         
         def _crete_date_input():
+            width = int(window_width*config.DATE_PERCENT_OF_WIDTH)
+            heigth = config.DATE_INPUT_HEIGTH
+
             date_input_widget = QLabel(self)
-            date_input_widget.resize(*config.DATE_INPUT_SIZE)
-            date_input_widget.move(*config.DATE_INPUT_POSITION)
+            date_input_widget.resize(width, heigth)
+            date_input_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             date_input = QLineEdit(self)
             date_input.setMaxLength(config.DATE_MAX_SYMBOLS)
-            date_input.resize(*config.DATE_INPUT_SIZE)
+            date_input.resize(width, heigth)
             date_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
-            date_input.move(*config.DATE_INPUT_POSITION)
+            date_input.setPlaceholderText(f"{date.today().strftime('%Y-%m-%d')}")
+            date_input.move(start_point[0] + self.current_width_point, start_point[1])
             # date_input.setStyleSheet("background: transparent; border: none;")
             # id_input.setFocus()
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='Date')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return date_input_widget, date_input
 
         def _create_name_input():
+            width = int(window_width*config.NAME_PERCENT_OF_WIDTH)
+            heigth = config.NAME_INPUT_HEIGTH
+
             name_input_widget = QLabel(self)
-            name_input_widget.resize(*config.NAME_INPUT_SIZE)
-            name_input_widget.move(*config.NAME_INPUT_POSITION)
+            name_input_widget.resize(width, heigth)
+            name_input_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             name_input = QLineEdit(self)
             name_input.setMaxLength(config.NAME_MAX_SYMBOLS)
-            name_input.resize(*config.NAME_INPUT_SIZE)
+            name_input.resize(width, heigth)
             name_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
-            name_input.move(*config.NAME_INPUT_POSITION)
+            name_input.setPlaceholderText("Name")
+            name_input.move(start_point[0] + self.current_width_point, start_point[1])
             # date_input.setStyleSheet("background: transparent; border: none;")
-            # id_input.setFocus()
+            name_input.setFocus()
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='Name')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return name_input_widget, name_input
 
         def _create_price_zl_input():
+            width = int(window_width*config.PRICE_ZL_PERCENT_OF_WIDTH)
+            heigth = config.PRICE_ZL_INPUT_HEIGTH
+
             price_zl_input_widget = QLabel(self)
-            price_zl_input_widget.resize(*config.PRICE_ZL_INPUT_SIZE)
-            price_zl_input_widget.move(*config.PRICE_ZL_INPUT_POSITION)
+            price_zl_input_widget.resize(width, heigth)
+            price_zl_input_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             price_zl_input = QLineEdit(self)
             price_zl_input.setMaxLength(config.PRICE_ZL_MAX_SYMBOLS)
-            price_zl_input.resize(*config.PRICE_ZL_INPUT_SIZE)
+            price_zl_input.resize(width, heigth)
             price_zl_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
-            price_zl_input.move(*config.PRICE_ZL_INPUT_POSITION)
+            price_zl_input.setPlaceholderText("ZL")
+            price_zl_input.move(start_point[0] + self.current_width_point, start_point[1])
             # date_input.setStyleSheet("background: transparent; border: none;")
             # id_input.setFocus()
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='ZL')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return price_zl_input_widget, price_zl_input
 
         def _create_price_eur_input():
+            width = int(window_width*config.PRICE_EUR_PERCENT_OF_WIDTH)
+            heigth = config.PRICE_EUR_INPUT_HEIGTH
+
             price_eur_input_widget = QLabel(self)
-            price_eur_input_widget.resize(*config.PRICE_EUR_INPUT_SIZE)
-            price_eur_input_widget.move(*config.PRICE_EUR_INPUT_POSITION)
+            price_eur_input_widget.resize(width, heigth)
+            price_eur_input_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             price_eur_input = QLineEdit(self)
             price_eur_input.setMaxLength(config.PRICE_EUR_MAX_SYMBOLS)
-            price_eur_input.resize(*config.PRICE_EUR_INPUT_SIZE)
-            price_eur_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
-            price_eur_input.move(*config.PRICE_EUR_INPUT_POSITION)
+            price_eur_input.resize(width, heigth)
+            price_eur_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру
+            price_eur_input.setPlaceholderText("EUR")
+            price_eur_input.move(start_point[0] + self.current_width_point, start_point[1])
             # date_input.setStyleSheet("background: transparent; border: none;")
             # id_input.setFocus()
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='EUR')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return price_eur_input_widget, price_eur_input
 
         def _create_link_input():
+            width = int(window_width*config.LINK_PERCENT_OF_WIDTH)
+            heigth = config.LINK_INPUT_HEIGTH
+
             link_input_widget = QLabel(self)
-            link_input_widget.resize(*config.LINK_INPUT_SIZE)
-            link_input_widget.move(*config.LINK_INPUT_POSITION)
+            link_input_widget.resize(width, heigth)
+            link_input_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             link_input = QLineEdit(self)
             link_input.setMaxLength(config.LINK_MAX_SYMBOLS)
-            link_input.resize(*config.LINK_INPUT_SIZE)
+            link_input.resize(width, heigth)
             link_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
-            link_input.move(*config.LINK_INPUT_POSITION)
+            link_input.setPlaceholderText("http://...")
+            link_input.move(start_point[0] + self.current_width_point, start_point[1])
             # date_input.setStyleSheet("background: transparent; border: none;")
             # id_input.setFocus()
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='Link')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return link_input_widget, link_input
 
         def _create_department_drop_btn():
+            width = int(window_width*config.DEPARTMENT_PERCENT_OF_WIDTH)
+            heigth = config.DEPARTMENT_BTN_HEIGTH
+
             department_widget = QLabel(self)
-            department_widget.resize(*config.DEPARTMENT_BTN_SIZE)
-            department_widget.move(*config.DEPARTMENT_INPUT_POSITION)
+            department_widget.resize(width, heigth)
+            department_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             drop_btn = QComboBox(self)
@@ -282,15 +328,20 @@ class QtProcurementTableWindow(QWidget):
             drop_btn.addItem("Plastique")
             drop_btn.addItem("Cleanlooks")
             drop_btn.addItem("windowsvista")
-            drop_btn.resize(*config.DEPARTMENT_BTN_SIZE)
-            drop_btn.move(*config.DEPARTMENT_INPUT_POSITION)
+            drop_btn.resize(width, heigth)
+            drop_btn.move(start_point[0] + self.current_width_point, start_point[1])
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='Department')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return department_widget, drop_btn
 
         def _create_project_drop_btn():
+            width = int(window_width*config.PROJECT_PERCENT_OF_WIDTH)
+            heigth = config.PROJECT_BTN_HEIGTH
+
             project_widget = QLabel(self)
-            project_widget.resize(*config.PROJECT_BTN_SIZE)
-            project_widget.move(*config.PROJECT_INPUT_POSITION)
+            project_widget.resize(width, heigth)
+            project_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             drop_btn = QComboBox(self)
@@ -300,22 +351,28 @@ class QtProcurementTableWindow(QWidget):
             drop_btn.addItem("Plastique")
             drop_btn.addItem("Cleanlooks")
             drop_btn.addItem("windowsvista")
-            drop_btn.resize(*config.PROJECT_BTN_SIZE)
-            drop_btn.move(*config.PROJECT_INPUT_POSITION)
+            drop_btn.resize(width, heigth)
+            drop_btn.move(start_point[0] + self.current_width_point, start_point[1])
 
+            # self._create_head_of_table(width=width, heigth=heigth, point=start_point, text='Project')
+            self.current_width_point += width # точка где заканчивается этот виджет
             return project_widget, drop_btn
 
         def _create_comment_input_line():
+            width = int(window_width*config.COMMENT_PERCENT_OF_WIDTH)
+            heigth = config.COMMENT_INPUT_HEIGTH
+
             comment_input_widget = QLabel(self)
-            comment_input_widget.resize(*config.COMMENT_INPUT_SIZE)
-            comment_input_widget.move(*config.COMMENT_INPUT_POSITION)
+            comment_input_widget.resize(width, heigth)
+            comment_input_widget.move(0, config.ID_INPUT_HEIGTH)
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             comment_input = QLineEdit(self)
             comment_input.setMaxLength(config.COMMENT_MAX_SYMBOLS)
-            comment_input.resize(*config.COMMENT_INPUT_SIZE)
+            comment_input.resize(width, heigth)
             comment_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
-            comment_input.move(*config.COMMENT_INPUT_POSITION)
+            comment_input.setPlaceholderText("We are waiting your comments ...")
+            comment_input.move(0, config.ID_INPUT_HEIGTH)
             # date_input.setStyleSheet("background: transparent; border: none;")
             # id_input.setFocus()
 
@@ -335,3 +392,47 @@ class QtProcurementTableWindow(QWidget):
             name_widget_and_input_line, price_zl_widget_and_input_line, \
             price_eur_widget_and_input_line, link_widget_and_input_line, \
             department_widget_and_drop_btn, project_widget_and_drop_btn, \
+            comment_widget_and_input_line
+
+    # def _create_head_of_table(self, width, heigth, point, text):
+    #     header = QLabel(self)
+    #     header.setAlignment(Qt.AlignCenter)
+    #     header.resize(width, heigth)
+    #     header.move(point[0] + self.current_width_point, point[1])
+    #     header.setText(text)
+
+    def _create_table(self):
+        def add_row_in_table(row, row_number):
+            for i, item in enumerate(row):
+                if isinstance(item, datetime):
+                    new_item = QTableWidgetItem(item.strftime('%Y-%m-%d'))
+                else:
+                    new_item = QTableWidgetItem(str(item))
+                table_widget.setItem(row_number, i, new_item)
+
+        table_widget = QTableWidget(20, 9, self)
+        table_widget.resize(self.procurement_table_window_size[0], self.procurement_table_window_size[1] - self.current_heigth_point*2)
+        table_widget.move(0, self.current_heigth_point*3)
+
+        db_connect = ProcurementDataBaseQuery()
+        last_records = db_connect.show_last_records()
+
+        for i, row in enumerate(last_records):
+            add_row_in_table(row, i)
+
+        table_widget.setColumnWidth(0, int(self.procurement_table_window_size[0]*config.ID_PERCENT_OF_WIDTH))
+        table_widget.setColumnWidth(1, int(self.procurement_table_window_size[0]*config.DATE_PERCENT_OF_WIDTH))
+        table_widget.setColumnWidth(2, int(self.procurement_table_window_size[0]*config.NAME_PERCENT_OF_WIDTH))
+        table_widget.setColumnWidth(3, int(self.procurement_table_window_size[0]*config.PRICE_ZL_PERCENT_OF_WIDTH))
+        table_widget.setColumnWidth(4, int(self.procurement_table_window_size[0]*config.PRICE_EUR_PERCENT_OF_WIDTH))
+        table_widget.setColumnWidth(5, int(self.procurement_table_window_size[0]*config.LINK_PERCENT_OF_WIDTH))
+        table_widget.setColumnWidth(6, int(self.procurement_table_window_size[0]*config.DEPARTMENT_PERCENT_OF_WIDTH))
+        table_widget.setColumnWidth(7, int(self.procurement_table_window_size[0]*config.PROJECT_PERCENT_OF_WIDTH))
+        header = table_widget.horizontalHeader()
+        header.hide()
+        rows_numbers = table_widget.verticalHeader()
+        rows_numbers.hide()
+
+        return table_widget
+
+    

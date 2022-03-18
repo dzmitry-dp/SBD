@@ -85,6 +85,10 @@ class ProcurementDataBaseQuery:
     def show_databases_in_mysql(self):
         return "SHOW DATABASES;"
 
+    @connection_to_database
+    def show_last_records(self, table_name=db_config.table_name, limit=10):
+        return f"SELECT * FROM {table_name} ORDER BY Id DESC LIMIT {limit}"
+
 
 class MySQLwithPandas:
     def import_excel_file_to_mysql_database(self, database_name=db_config.database_name, table_name=db_config.table_name):
