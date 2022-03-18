@@ -1,38 +1,33 @@
-import mysql.connector as sql
-from mysql.connector import Error
+import MySQLdb as mysql
 from loguru import logger
 
-from db.config import root_password, database_name
+from db.config import host_name, user_name, password, database_name
 
-def connection_to_database(query_func):
+def connection_to_database(create_query):
     def wrapper(self, **kwargs):
         try:
-            connection = sql.connect(host='localhost',
-                                                user='root',
-                                                password=root_password,
+            connection = mysql.connect(host=host_name,
+                                                user=user_name,
+                                                password=password,
                                                 database=database_name)
-            if connection.is_connected():
-                db_Info = connection.get_server_info()
-                logger.info(f"Connected to MySQL Server version {db_Info}")
-                cursor = connection.cursor()
-                logger.info(query_func(self, **kwargs))
-                if kwargs.get('data', None) != None:
-                    cursor.execute(query_func(self, **kwargs))
-                    connection.commit()
-                else:
-                    cursor.execute(query_func(self, **kwargs))
+            logger.info(f"Connected to MySQL Server")
+            cursor = connection.cursor()
+            query = create_query(self, **kwargs)
+            logger.info(query)
 
-                if "SELECT" in query_func(self, **kwargs):
-                    record = cursor.fetchall()
-                    logger.info(f"Select to database: {record}")
-                    return record
-
-        except Error as e:
-            print("Error while connecting to MySQL", e)
+            if 'INSERT' in query:
+                cursor.execute(query)
+                connection.commit()
+            else:
+                cursor.execute(query)
+                record = cursor.fetchall()
+                logger.info(f"Select to database: {record}")
+                return record
+        except:
+            logger.info("Error while connecting to MySQL")
         finally:
-            if connection.is_connected():
-                cursor.close()
-                connection.close()
-                print("MySQL connection is closed")
+            cursor.close()
+            connection.close()
+            logger.info("MySQL connection is closed")
     return wrapper
 
