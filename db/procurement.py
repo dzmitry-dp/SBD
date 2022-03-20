@@ -2,35 +2,9 @@ from loguru import logger
 import pandas as pd
 import sqlalchemy
 
+import config
 import db.config as db_config
 from db.connect import connection_to_database
-
-table = {
-        'table_name': 'test',
-        'col_ty': {
-            'Id': 'INT NOT NULL AUTO_INCREMENT PRIMARY KEY',
-            'Date': 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
-            'Name': 'VARCHAR(255)',
-            'Price_ZL': 'FLOAT',
-            'Price_EUR': 'FLOAT',
-            'Link': 'TEXT', 
-            'Department': 'VARCHAR(255)', 
-            'Project': 'VARCHAR(255)',
-            'Comments': 'VARCHAR(255)',
-        }
-    }
-
-example_values = {
-        'Date': "'2022-03-03'",
-        'Name': "'Трубка шланга для пылесоса с метражом 20мм длина 50 м'",
-        'Price_ZL': '84.04',
-        'Price_EUR': '64.33',
-        'Link': "'https://allegro.pl/moje-allegro/zakupy/kupione/ddb72880-9b06-11ec-a466-1d12e6b7c649'", 
-        'Department': "'Столярка'", 
-        'Project': "'Reactor - Prague'",
-        'Comments': "'Не выставляют фактуру'",
-    }
-
 
 class ProcurementDataBaseQuery:
     def __init__(self):
@@ -42,7 +16,7 @@ class ProcurementDataBaseQuery:
         return f"CREATE DATABASE {database_name};"
 
     @connection_to_database
-    def create_table(self, data: dict = table):
+    def create_table(self, data: dict = config.table):
         table_name: str = data['table_name']
         columns_and_types: dict = data['col_ty']
 
@@ -56,7 +30,7 @@ class ProcurementDataBaseQuery:
         table_name: str = table_name
 
         if data == None:
-            columns_and_values: dict = example_values
+            columns_and_values: dict = config.example_values
         else:
             columns_and_values: dict = data
 
@@ -66,7 +40,7 @@ class ProcurementDataBaseQuery:
 
     @connection_to_database
     def show_all_columns_from_table(self, table_name=db_config.table_name):
-        columns = ', '.join(list(table['col_ty'].keys()))
+        columns = ', '.join(list(config.table['col_ty'].keys()))
         return f"SELECT {columns} FROM {table_name};"
 
     @connection_to_database
@@ -86,7 +60,7 @@ class ProcurementDataBaseQuery:
         return "SHOW DATABASES;"
 
     @connection_to_database
-    def show_last_records(self, table_name=db_config.table_name, limit=10):
+    def show_last_records(self, table_name=db_config.table_name, limit=config.TABLE_ROWS):
         return f"SELECT * FROM {table_name} ORDER BY Id DESC LIMIT {limit}"
 
 

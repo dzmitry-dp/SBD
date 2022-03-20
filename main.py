@@ -1,15 +1,11 @@
-"""
-- Разворачиваем интерфейс
-- Подключаемся к базам данных
-"""
 import sys
 from loguru import logger
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
-from PyQt5.QtGui import QFont, QFontDatabase
+# from PyQt5.QtGui import QFont, QFontDatabase
 
 import config
 from qt.window import QtMainWindow
-from db.procurement import ProcurementDataBaseQuery, MySQLwithPandas
+# from db.procurement import ProcurementDataBaseQuery, MySQLwithPandas
 
 
 class App:
@@ -18,10 +14,8 @@ class App:
         super().__init__()
         # создаю приложение и провожу настройки
         self.app = QApplication(sys.argv)
-        # QFontDatabase.addApplicationFont(config.FONT_PATH)
-        # self.app.setFont(QFont( config.FONT_NAME , config.FONT_SIZE))
+        # получаю данные о разрешении монитора
         screen_width, screen_height = self._get_screen_size()
-        # разрешение монитора
         self.screen_size = (screen_width, screen_height)
         # центральная точка на мониторе
         self.center_screen_point = (int(screen_width/2), int(screen_height/2))
@@ -29,7 +23,6 @@ class App:
         self.main_window = QtMainWindow(screen_width, screen_height)
 
     def _get_screen_size(self):
-        logger.info('class Screen')
         # размер экрана компьютера 
         screen_geometry= QDesktopWidget().availableGeometry()
         screen_width = screen_geometry.width()

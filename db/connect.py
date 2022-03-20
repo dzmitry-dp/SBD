@@ -21,10 +21,9 @@ def connection_to_database(create_query):
             else:
                 cursor.execute(query)
                 record = cursor.fetchall()
-                logger.info(f"Select to database: {record}")
                 return record
         except:
-            logger.info("Error while connecting to MySQL")
+            logger.error("Error while connecting to MySQL")
         finally:
             cursor.close()
             connection.close()

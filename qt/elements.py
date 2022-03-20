@@ -1,7 +1,6 @@
 from loguru import logger
 from PyQt5.QtWidgets import QLabel, QPushButton
 
-import config
 
 class QtButtonElements:
     def __init__(self) -> None:
@@ -20,7 +19,7 @@ class QtButtonElements:
         button = self._create_qt_button(name)
         return widget, button
 
-    def _set_style_sheet(self, obj, ico_path):
+    def _set_main_button_style_sheet(self, obj, ico_path):
         widget = obj[0]
         button = obj[1]
         widget.setStyleSheet("QLabel"

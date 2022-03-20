@@ -11,20 +11,19 @@ from qt.elements import QtButtonElements
 from qt.logic import MainButtonsClick
 from db.procurement import ProcurementDataBaseQuery
 
-btn_click_logic = MainButtonsClick()
 
 class QtMainWindow(QWidget, QtButtonElements):
     def __init__(self, screen_width, screen_height):
         logger.info('class QtMainWindow')
         super().__init__()
         # Класс анимации прозрачности окна
-        self.animation = QPropertyAnimation(self, b'windowOpacity')
-        self.animation.setDuration(1000)        # Продолжительность: 1 секунда
-        self.animation.setStartValue(0)
-        self.animation.setEndValue(1)
-        self.animation.start()
+        self.start_animation = QPropertyAnimation(self, b'windowOpacity')
+        self.start_animation.setDuration(1000)  # Продолжительность: 1 секунда
+        self.start_animation.setStartValue(0)
+        self.start_animation.setEndValue(1)
+        self.start_animation.start()
 
-        self.screen_size = None
+        self.screen_size = (screen_width, screen_height)
 
         # отрисовываю элементы
         self._project_btn = None
@@ -45,7 +44,7 @@ class QtMainWindow(QWidget, QtButtonElements):
             for btn in self._project_btn:
                 btn.resize(*config.MAIN_MENU_BTN_SIZE)
                 btn.move(0, config.MAIN_MENU_BTN_SIZE[1] * 0)
-            self._set_style_sheet(self._project_btn, config.ICO_PROJ_BTN)
+            self._set_main_button_style_sheet(self._project_btn, config.ICO_PROJ_BTN)
         return self._project_btn
 
     @property
@@ -56,7 +55,7 @@ class QtMainWindow(QWidget, QtButtonElements):
             for btn in self._attendance_btn:
                 btn.resize(*config.MAIN_MENU_BTN_SIZE)
                 btn.move(0, config.MAIN_MENU_BTN_SIZE[1] * 1)
-            self._set_style_sheet(self._attendance_btn, config.ICO_ATTEND_BTN)
+            self._set_main_button_style_sheet(self._attendance_btn, config.ICO_ATTEND_BTN)
         return self._attendance_btn
 
     @property
@@ -67,7 +66,7 @@ class QtMainWindow(QWidget, QtButtonElements):
             for btn in self._procurement_btn:
                 btn.resize(*config.MAIN_MENU_BTN_SIZE)
                 btn.move(0, config.MAIN_MENU_BTN_SIZE[1] * 2)
-            self._set_style_sheet(self._procurement_btn, config.ICO_PROC_BTN)
+            self._set_main_button_style_sheet(self._procurement_btn, config.ICO_PROC_BTN)
         return self._procurement_btn
 
     @property
@@ -78,7 +77,7 @@ class QtMainWindow(QWidget, QtButtonElements):
             for btn in self._categories_btn:
                 btn.resize(*config.MAIN_MENU_BTN_SIZE)
                 btn.move(0, config.MAIN_MENU_BTN_SIZE[1] * 3)
-            self._set_style_sheet(self._categories_btn, config.ICO_CATEGORIES_BTN)
+            self._set_main_button_style_sheet(self._categories_btn, config.ICO_CATEGORIES_BTN)
         return self._categories_btn
 
     @property
@@ -90,7 +89,7 @@ class QtMainWindow(QWidget, QtButtonElements):
             self._documentation_btn[0].move(0, config.MAIN_MENU_BTN_SIZE[1] * 4)
             self._documentation_btn[1].resize(*config.MAIN_MENU_BTN_SIZE)
             self._documentation_btn[1].move(0, config.MAIN_MENU_BTN_SIZE[1] * 4)
-            self._set_style_sheet(self._documentation_btn, config.ICO_DOC_BTN)
+            self._set_main_button_style_sheet(self._documentation_btn, config.ICO_DOC_BTN)
         return self._documentation_btn
 
     @property
@@ -101,7 +100,7 @@ class QtMainWindow(QWidget, QtButtonElements):
             for btn in self._custom_btn:
                 btn.resize(*config.MAIN_MENU_BTN_SIZE)
                 btn.move(0, config.MAIN_MENU_BTN_SIZE[1] * 5)
-            self._set_style_sheet(self._custom_btn, config.ICO_CUSTOM_BTN)
+            self._set_main_button_style_sheet(self._custom_btn, config.ICO_CUSTOM_BTN)
         return self._custom_btn
 
     @property
@@ -119,17 +118,19 @@ class QtMainWindow(QWidget, QtButtonElements):
         return self._exit_btn
 
     def _init_window(self, screen_width, screen_height):
-        # вычисляю геометрию откна
-        self.screen_size = (screen_width, screen_height)
+        # вычисляю геометрию окна
         start_point = (screen_width - config.MAIN_MENU_BTN_SIZE[0], int(screen_height/2) - int(config.MAIN_WINDOW_SIZE[1]/2))
         self.setGeometry(*start_point, *config.MAIN_WINDOW_SIZE)
         self.setWindowFlags(Qt.FramelessWindowHint) # убираю верхнюю панель окна 
         self.setWindowFlag(Qt.WindowStaysOnTopHint) # приложение поверх других окон
 
+        # создаю объкт который контролирует нажатие кнопок главного окна
+        btn_click_logic = MainButtonsClick(self)
+
         # подключаю кнопки
         self.project_btn
         self.attendance_btn
-        self.procurement_btn[1].clicked.connect(partial(btn_click_logic.get_procurement_form, self.screen_size))
+        self.procurement_btn[1].clicked.connect(partial(btn_click_logic.get_procurement_form))
         self.categories_btn
         self.documentation_btn
         self.custom_btn
@@ -138,18 +139,24 @@ class QtMainWindow(QWidget, QtButtonElements):
 
 class QtProcurementTableWindow(QWidget):
     "Окно таблиц, которое появляется когда пользователь нажимает кнопку главного меню"
-    def __init__(self, screen_size) -> None:
+    def __init__(self, main_window) -> None:
         logger.info('class QtTableWindow')
         super().__init__()
-        self.screen_size = screen_size
+        self.main_window = main_window
+        self.screen_size = main_window.screen_size
         self.procurement_table_window_size = self._calculation_procurement_table_window_size()
 
         self.current_width_point = 0 # переменная в которую записываю координату ширины, где должен начинаться новый виджет
-        self.current_heigth_point = config.ID_INPUT_HEIGTH # переменная в которую записываю координату высоты, где должен начинаться новый виджет
-        # создаем элементы которые заполняет пользователь
+        self.current_heigth_input_line = config.ID_INPUT_HEIGTH # переменная в которую записываю координату высоты, где должен начинаться новый виджет
+        self.current_heigth_table = self.current_heigth_input_line * 18 # высота таблицы
+        # высота области дополнительной информации
+        self.current_heigth_additionally_information = self.procurement_table_window_size[1] - self.current_heigth_input_line - self.current_heigth_table
+
+        # создаем элементы интерфейса
         self.procurement_input = self._create_input_pricurement_line()
         self.table = self._create_table()
-        self.table.show()
+        self.additionally_information = self._create_additionall_information()
+
 
         self._init_window()
 
@@ -322,12 +329,9 @@ class QtProcurementTableWindow(QWidget):
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             drop_btn = QComboBox(self)
-            drop_btn.addItem("motif")
-            drop_btn.addItem("Windows")
-            drop_btn.addItem("cde")
-            drop_btn.addItem("Plastique")
-            drop_btn.addItem("Cleanlooks")
-            drop_btn.addItem("windowsvista")
+            for department in config.DEPARTMENTS:
+                drop_btn.addItem(department)
+
             drop_btn.resize(width, heigth)
             drop_btn.move(start_point[0] + self.current_width_point, start_point[1])
 
@@ -345,12 +349,9 @@ class QtProcurementTableWindow(QWidget):
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             drop_btn = QComboBox(self)
-            drop_btn.addItem("motif")
-            drop_btn.addItem("Windows")
-            drop_btn.addItem("cde")
-            drop_btn.addItem("Plastique")
-            drop_btn.addItem("Cleanlooks")
-            drop_btn.addItem("windowsvista")
+            for project in config.PROJECTS:
+                drop_btn.addItem(project)
+
             drop_btn.resize(width, heigth)
             drop_btn.move(start_point[0] + self.current_width_point, start_point[1])
 
@@ -364,7 +365,7 @@ class QtProcurementTableWindow(QWidget):
 
             comment_input_widget = QLabel(self)
             comment_input_widget.resize(width, heigth)
-            comment_input_widget.move(0, config.ID_INPUT_HEIGTH)
+            comment_input_widget.move(start_point[0] + self.current_width_point, start_point[1])
             # id_input_widget.setStyleSheet(f"background-image: url({config.PASSWORD_PNG});")
 
             comment_input = QLineEdit(self)
@@ -372,7 +373,7 @@ class QtProcurementTableWindow(QWidget):
             comment_input.resize(width, heigth)
             comment_input.setAlignment(Qt.AlignCenter) # печатаю символы по центру 
             comment_input.setPlaceholderText("We are waiting your comments ...")
-            comment_input.move(0, config.ID_INPUT_HEIGTH)
+            comment_input.move(start_point[0] + self.current_width_point, start_point[1])
             # date_input.setStyleSheet("background: transparent; border: none;")
             # id_input.setFocus()
 
@@ -394,13 +395,6 @@ class QtProcurementTableWindow(QWidget):
             department_widget_and_drop_btn, project_widget_and_drop_btn, \
             comment_widget_and_input_line
 
-    # def _create_head_of_table(self, width, heigth, point, text):
-    #     header = QLabel(self)
-    #     header.setAlignment(Qt.AlignCenter)
-    #     header.resize(width, heigth)
-    #     header.move(point[0] + self.current_width_point, point[1])
-    #     header.setText(text)
-
     def _create_table(self):
         def add_row_in_table(row, row_number):
             for i, item in enumerate(row):
@@ -410,9 +404,9 @@ class QtProcurementTableWindow(QWidget):
                     new_item = QTableWidgetItem(str(item))
                 table_widget.setItem(row_number, i, new_item)
 
-        table_widget = QTableWidget(20, 9, self)
-        table_widget.resize(self.procurement_table_window_size[0], self.procurement_table_window_size[1] - self.current_heigth_point*2)
-        table_widget.move(0, self.current_heigth_point*3)
+        table_widget = QTableWidget(config.TABLE_ROWS, config.TABLE_COLUMNS, self)
+        table_widget.resize(self.procurement_table_window_size[0], self.current_heigth_table)
+        table_widget.move(0, self.current_heigth_input_line)
 
         db_connect = ProcurementDataBaseQuery()
         last_records = db_connect.show_last_records()
@@ -428,11 +422,104 @@ class QtProcurementTableWindow(QWidget):
         table_widget.setColumnWidth(5, int(self.procurement_table_window_size[0]*config.LINK_PERCENT_OF_WIDTH))
         table_widget.setColumnWidth(6, int(self.procurement_table_window_size[0]*config.DEPARTMENT_PERCENT_OF_WIDTH))
         table_widget.setColumnWidth(7, int(self.procurement_table_window_size[0]*config.PROJECT_PERCENT_OF_WIDTH))
-        header = table_widget.horizontalHeader()
+        table_widget.setColumnWidth(8, int(self.procurement_table_window_size[0]*config.COMMENT_PERCENT_OF_WIDTH))
+
+        for i in range(0, config.TABLE_ROWS):
+            table_widget.setRowHeight(i, self.current_heigth_input_line)
+
+        header = table_widget.horizontalHeader() # имена столбцов
         header.hide()
-        rows_numbers = table_widget.verticalHeader()
+        rows_numbers = table_widget.verticalHeader() # нумерация строк
         rows_numbers.hide()
 
         return table_widget
 
-    
+    def _create_additionall_information(self):
+        def center_location_on_the_window(_object, _self):
+            "Вычисление центральной точки окна для объекта расположенного внутри этого окна"
+            window_size = _self.geometry()
+            element_size = _object.geometry()
+            x = int(window_size.width()/2 - element_size.width()/2)
+            y = int(window_size.height()/2 - element_size.height()/2)
+            return x, y
+
+        width, heigth = self.procurement_table_window_size
+        additionall_information = QLabel(self)
+        additionall_information.resize(width, heigth - self.current_heigth_input_line - self.current_heigth_table)
+        additionall_information.move(0, self.current_heigth_input_line + self.current_heigth_table)
+        # additionall_information.setStyleSheet("background: #5FC0CE; border: 2px solid;")
+
+        header = QLabel(additionall_information)
+        header.setMinimumHeight(50)
+        x, y = center_location_on_the_window(header, additionall_information)
+        header.move(x, 0)
+        header.setText('Additionall Information')
+
+        balance_zl = QLabel(additionall_information)
+        balance_zl.setMinimumHeight(50)
+        balance_zl.setMinimumWidth(50)
+        balance_zl.move(100, 50)
+        balance_zl.setText('Balance: 40 000 zl')
+
+        balance_eur = QLabel(additionall_information)
+        balance_eur.setMinimumHeight(50)
+        balance_eur.setMinimumWidth(50)
+        balance_eur.move(100, 100)
+        balance_eur.setText('Balance: 10 000 eur')
+
+        balance_1 = QLabel(additionall_information)
+        balance_1.setMinimumHeight(50)
+        balance_1.setMinimumWidth(50)
+        balance_1.move(self.procurement_table_window_size[0] - 250, 50)
+        balance_1.setText('40 000 zl : Balance')
+
+        balance_2 = QLabel(additionall_information)
+        balance_2.setMinimumHeight(50)
+        balance_2.setMinimumWidth(50)
+        balance_2.move(self.procurement_table_window_size[0] - 250, 100)
+        balance_2.setText('10 000 eur : Balance')
+
+        message = QLabel(additionall_information)
+        message.setMinimumHeight(50)
+        x, y = center_location_on_the_window(message, additionall_information)
+        message.move(x - 30, y + 50)
+        message.setText('"Денег нет, но вы держитесь!"')
+
+    def closeEvent(self, event):
+        "Когда пользователь закрыл окно таблицы закупок"
+        self.main_window.start_animation.start()
+        self.main_window.show()
+   
+
+class QtProcurementButtonsMenu(QWidget, QtButtonElements):
+    "Кнопки которые использую для управления таблицей заказов"
+    def __init__(self, screen_size):
+        super().__init__()
+        self.screen_size = screen_size
+
+        self._update = None # "скачать снова" данные с текущими настройками
+        self._change_min_row = None # выбрать минимальное количество строк
+        self._rewrite_data = None # записать данные с текущими настройками
+        self._main_menu = None # вернуться на главное меню без закрытия таблицы
+
+        self._init_window()
+
+    @property
+    def update(self):
+        if self._update is None:
+            self._update = self.init_button(name='Update') # возвращает widget + button
+            for btn in self._update:
+                btn.resize(*config.MAIN_MENU_BTN_SIZE)
+                btn.move(0, 0)
+            # self._set_main_button_style_sheet(self._project_btn, config.ICO_PROJ_BTN)
+        return self._update
+
+    def _init_window(self):
+        screen_width = self.screen_size[0]
+        screen_height = self.screen_size[1]
+        start_point = (screen_width - config.MAIN_MENU_BTN_SIZE[0], int(screen_height/2) - int(config.MAIN_WINDOW_SIZE[1]/2))
+        self.setGeometry(*start_point, *config.MAIN_WINDOW_SIZE)
+        self.setWindowFlags(Qt.FramelessWindowHint) # убираю верхнюю панель окна 
+        self.setWindowFlag(Qt.WindowStaysOnTopHint) # приложение поверх других окон
+
+        self.update
