@@ -106,15 +106,12 @@ class QtMainWindow(QWidget, QtButtonElements):
     @property
     def exit_btn(self):
         if self._exit_btn is None:
-            self._exit_btn = self.init_button(name='Exit') # возвращает widget + button
-            self._exit_btn[1].setStyleSheet("QPushButton"
-                                  "{"
-                                  "color: red;"
-                                  "font-size:40px;"
-                                  "}")
+            self._exit_btn = self.init_button(name='') # возвращает widget + button
+            self._exit_btn[1].setFocus()
             for btn in self._exit_btn:
                 btn.resize(*config.MAIN_MENU_BTN_SIZE)
                 btn.move(0, config.MAIN_MENU_BTN_SIZE[1] * 6)
+            self._set_main_button_style_sheet(self._exit_btn, config.ICO_EXIT_BTN)
         return self._exit_btn
 
     def _init_window(self, screen_width, screen_height):
@@ -157,7 +154,6 @@ class QtProcurementTableWindow(QWidget):
         self.table = self._create_table()
         self.additionally_information = self._create_additionall_information()
 
-
         self._init_window()
 
     def _init_window(self):
@@ -168,7 +164,6 @@ class QtProcurementTableWindow(QWidget):
         self.setWindowTitle('Закупки - A+props')
         self.setWindowIcon(QIcon('.\\static\\procurement.png'))
         self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint) # делаю не активной кнопку 'развернуть'
-        self.setFocus()
 
     def _location_table_window_on_screen(self, width, heigth):
         "Вычисление центральной точки окна для объекта расположенного внутри этого окна"
@@ -507,19 +502,19 @@ class QtProcurementButtonsMenu(QWidget, QtButtonElements):
     @property
     def update(self):
         if self._update is None:
-            self._update = self.init_button(name='Update') # возвращает widget + button
+            self._update = self.init_button(name='') # возвращает widget + button
             for btn in self._update:
-                btn.resize(*config.MAIN_MENU_BTN_SIZE)
+                btn.resize(*config.UPDATE_BTN_SIZE)
                 btn.move(0, 0)
-            # self._set_main_button_style_sheet(self._project_btn, config.ICO_PROJ_BTN)
+            self._set_procurement_sheet_menu_btn(self._update, config.PROCUREMENT_UPDATE_BTN)
         return self._update
 
     def _init_window(self):
         screen_width = self.screen_size[0]
         screen_height = self.screen_size[1]
-        start_point = (screen_width - config.MAIN_MENU_BTN_SIZE[0], int(screen_height/2) - int(config.MAIN_WINDOW_SIZE[1]/2))
-        self.setGeometry(*start_point, *config.MAIN_WINDOW_SIZE)
+        start_point = (screen_width - config.UPDATE_BTN_SIZE[0], int(screen_height/2) - int(config.UPDATE_BTN_SIZE[1]/2))
+        self.setGeometry(*start_point, *config.PROCURUMENT_MENU_WINDOW_SIZE)
         self.setWindowFlags(Qt.FramelessWindowHint) # убираю верхнюю панель окна 
         self.setWindowFlag(Qt.WindowStaysOnTopHint) # приложение поверх других окон
 
-        self.update
+        self.update[1].clicked.connect(sys.exit)

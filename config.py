@@ -29,15 +29,16 @@ example_values = {
 # main window
 ########
 # START_POINT_X_Y = [0,0]
-MAIN_MENU_BTN_SIZE = (150, 150)
+MAIN_MENU_BTN_SIZE = (100, 100)
 MAIN_WINDOW_SIZE = (MAIN_MENU_BTN_SIZE[0], 7 * MAIN_MENU_BTN_SIZE[1])
 
-ICO_DOC_BTN = './static/doc.png'
-ICO_PROJ_BTN = './static/proj.png'
-ICO_ATTEND_BTN = './static/attendance.png'
+ICO_DOC_BTN = './static/documents.png'
+ICO_PROJ_BTN = './static/project.png'
+ICO_ATTEND_BTN = './static/attendant.png'
 ICO_PROC_BTN = './static/procurement.png'
-ICO_CATEGORIES_BTN = './static/categories.png'
+ICO_CATEGORIES_BTN = './static/category.png'
 ICO_CUSTOM_BTN = './static/custom.png'
+ICO_EXIT_BTN = './static/exit.png'
 
 FONT_NAME = 'Apple Garamond'
 FONT_PATH = './static/AppleGaramond.ttf'
@@ -134,3 +135,10 @@ PROJECTS = [
     'Hangover - Nancy',
     'Kvantario - Benesov',
 ]
+
+# procurement menu
+########
+UPDATE_BTN_SIZE = (100, 100)
+PROCURUMENT_MENU_WINDOW_SIZE = (UPDATE_BTN_SIZE[0], UPDATE_BTN_SIZE[1]*1)
+
+PROCUREMENT_UPDATE_BTN = './static/update.png'

@@ -38,3 +38,23 @@ class QtButtonElements:
                             "{"
                             "border :2px solid #0776A0;"
                             "}")
+
+    def _set_procurement_sheet_menu_btn(self, obj, ico_path):
+        widget = obj[0]
+        button = obj[1]
+        widget.setStyleSheet("QLabel"
+                                  "{"
+                                  f"background-image: url({ico_path});"
+                                  "}")
+        button.setStyleSheet("QPushButton"
+                            "{"
+                            f"background: transparent;"
+                            "}"
+                            "QPushButton::hover"
+                            "{"
+                            "border :3px solid #0776A0;"
+                            "}"
+                            "QPushButton::focus"
+                            "{"
+                            "border :2px solid #0776A0;"
+                            "}")
