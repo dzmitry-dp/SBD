@@ -1,6 +1,6 @@
 from loguru import logger
 
-import qt.window as window
+import qt.procurement as qt_window
 
 
 class BackgroundLogic:
@@ -34,11 +34,11 @@ class MainButtonsClick(BackgroundLogic):
     @property
     def procurement_form(self):
         if self._procurement_form is None:
-            self._procurement_form = window.QtProcurementTableWindow(self.main_window)
+            self._procurement_form = qt_window.QtProcurementTableWindow(self.main_window)
         return self._procurement_form
 
     @property
     def procurement_btn_menu(self):
         if self._procurement_btn_menu is None:
-            self._procurement_btn_menu = window.QtProcurementButtonsMenu(self.main_window.screen_size)
+            self._procurement_btn_menu = qt_window.QtProcurementButtonsMenu(self.main_window)
         return self._procurement_btn_menu
