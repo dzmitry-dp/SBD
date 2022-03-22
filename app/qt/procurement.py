@@ -359,7 +359,7 @@ class QtProcurementTableWindow(QWidget):
 
     def closeEvent(self, event):
         "Когда пользователь закрыл окно таблицы закупок"
-        self.main_window.start_animation.start()
+        # self.main_window.start_animation.start()
         self.main_window.show()
    
 

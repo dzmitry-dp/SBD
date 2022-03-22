@@ -29,11 +29,11 @@ class App:
         # создаю главное окно
         self.main_window = QtMainWindow(screen_width, screen_height)
         # Класс анимации прозрачности окна
-        self.main_window.start_animation = QPropertyAnimation(self, b'windowOpacity')
-        self.main_window.start_animation.setDuration(1000)  # Продолжительность: 1 секунда
-        self.main_window.start_animation.setStartValue(0)
-        self.main_window.start_animation.setEndValue(1)
-        self.main_window.start_animation.start()
+        # self.main_window.start_animation = QPropertyAnimation(self, b'windowOpacity')
+        # self.main_window.start_animation.setDuration(1000)  # Продолжительность: 1 секунда
+        # self.main_window.start_animation.setStartValue(0)
+        # self.main_window.start_animation.setEndValue(1)
+        # self.main_window.start_animation.start()
 
 
     def run_qt(self):
