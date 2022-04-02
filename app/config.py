@@ -1,47 +1,20 @@
-# MySQL database
-########
-table = {
-    'table_name': 'test',
-    'col_ty': {
-        'Id': 'INT NOT NULL AUTO_INCREMENT PRIMARY KEY',
-        'Date': 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
-        'Name': 'VARCHAR(255)',
-        'Price_ZL': 'FLOAT',
-        'Price_EUR': 'FLOAT',
-        'Link': 'TEXT', 
-        'Department': 'VARCHAR(255)', 
-        'Project': 'VARCHAR(255)',
-        'Comments': 'VARCHAR(255)',
-        }
-    }
-
-example_values = {
-        'Date': "'2022-03-03'",
-        'Name': "'Трубка шланга для пылесоса с метражом 20мм длина 50 м'",
-        'Price_ZL': '84.04',
-        'Price_EUR': '64.33',
-        'Link': "'https://allegro.pl/moje-allegro/zakupy/kupione/ddb72880-9b06-11ec-a466-1d12e6b7c649'", 
-        'Department': "'Столярка'", 
-        'Project': "'Reactor - Prague'",
-        'Comments': "'Не выставляют фактуру'",
-    }
-
+import db.config as db
 # main window
 ########
 # START_POINT_X_Y = [0,0]
 MAIN_MENU_BTN_SIZE = (100, 100)
 MAIN_WINDOW_SIZE = (MAIN_MENU_BTN_SIZE[0], 7 * MAIN_MENU_BTN_SIZE[1])
 
-ICO_DOC_BTN = './app/static/documents.png'
-ICO_PROJ_BTN = './app/static/project.png'
-ICO_ATTEND_BTN = './app/static/attendant.png'
-ICO_PROC_BTN = './app/static/procurement.png'
-ICO_CATEGORIES_BTN = './app/static/category.png'
-ICO_CUSTOM_BTN = './app/static/custom.png'
-ICO_EXIT_BTN = './app/static/exit.png'
+ICO_DOC_BTN = './static/documents.png'
+ICO_PROJ_BTN = './static/project.png'
+ICO_ATTEND_BTN = './static/attendant.png'
+ICO_PROC_BTN = './static/procurement.png'
+ICO_CATEGORIES_BTN = './static/category.png'
+ICO_CUSTOM_BTN = './static/custom.png'
+ICO_EXIT_BTN = './static/exit.png'
 
 FONT_NAME = 'Apple Garamond'
-FONT_PATH = './app/static/AppleGaramond.ttf'
+FONT_PATH = './static/AppleGaramond.ttf'
 FONT_SIZE = 16
 ########
 
@@ -94,7 +67,7 @@ COMMENT_MAX_SYMBOLS = 255
 # procurement table
 ########
 TABLE_ROWS = 17
-TABLE_COLUMNS = len(table['col_ty'])
+TABLE_COLUMNS = len(db.table['col_ty'])
 
 DEPARTMENTS = [
     'None',
@@ -141,4 +114,5 @@ PROJECTS = [
 UPDATE_BTN_SIZE = (100, 100)
 PROCURUMENT_MENU_WINDOW_SIZE = (UPDATE_BTN_SIZE[0], UPDATE_BTN_SIZE[1]*1)
 
-PROCUREMENT_UPDATE_BTN = './app/static/update.png'
+PROCUREMENT_WINDOW_TEXT = 'Закупки - A+props'
+PROCUREMENT_UPDATE_BTN = './static/update.png'

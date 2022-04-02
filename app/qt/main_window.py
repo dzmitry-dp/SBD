@@ -1,4 +1,3 @@
-import sys
 from functools import partial
 from loguru import logger
 from PyQt5.QtWidgets import QWidget
@@ -121,4 +120,4 @@ class QtMainWindow(QWidget, QtButtonElements):
         self.categories_btn
         self.documentation_btn
         self.custom_btn
-        self.exit_btn[1].clicked.connect(sys.exit)
+        self.exit_btn[1].clicked.connect(partial(btn_click_logic.shut_down))

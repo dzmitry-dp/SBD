@@ -8,13 +8,10 @@ from PyQt5.QtGui import QIcon
 
 import config
 from qt.elements import QtButtonElements
-from db.procurement import ProcurementDataBaseQuery
+from db.procurement_query import ProcurementDataBaseQuery
 
-
-class QtProcurementTableWindow(QWidget):
-    "Окно таблиц, которое появляется когда пользователь нажимает кнопку главного меню"
+class TableWindowSize(QWidget):
     def __init__(self, main_window) -> None:
-        logger.info('class QtTableWindow')
         super().__init__()
         self.main_window = main_window
         self.screen_size = main_window.screen_size
@@ -26,34 +23,39 @@ class QtProcurementTableWindow(QWidget):
         # высота области дополнительной информации
         self.current_heigth_additionally_information = self.procurement_table_window_size[1] - self.current_heigth_input_line - self.current_heigth_table
 
-        # создаем элементы интерфейса
-        self.procurement_input = self._create_input_pricurement_line()
-        self.table = self._create_table()
-        self.additionally_information = self._create_additionall_information()
-
-        self._init_window()
-
-    def _init_window(self):
-        width, heigth = self.procurement_table_window_size
-        start_point = self._location_table_window_on_screen(self.procurement_table_window_size[0], self.procurement_table_window_size[1])
-        x, y = start_point
-        self.setGeometry(x, y, width, heigth)
-        self.setWindowTitle('Закупки - A+props')
-        self.setWindowIcon(QIcon('.\\static\\procurement.png'))
-        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint) # делаю не активной кнопку 'развернуть'
-
-    def _location_table_window_on_screen(self, width, heigth):
-        "Вычисление центральной точки окна для объекта расположенного внутри этого окна"
-        center_screen_point = (int(self.screen_size[0]/2), int(self.screen_size[1]/2))
-        x = int(center_screen_point[0] - width/2)
-        y = int(center_screen_point[1] - heigth/2)
-        return x, y
-    
     def _calculation_procurement_table_window_size(self):
         "Расчитываю размер окна таблицы Закупки - A+props"
         return int(self.screen_size[0] * config.PROCENT_OF_WINDOW), int(self.screen_size[1] * config.PROCENT_OF_WINDOW)
 
-    def _create_input_pricurement_line(self):
+class QtProcurementTableWindow(TableWindowSize):
+    "Окно таблицы, которое появляется когда пользователь нажимает кнопку главного меню"
+    def __init__(self, main_window) -> None:
+        logger.info('class QtTableWindow')
+        super().__init__(main_window)
+        # создаем элементы интерфейса
+        self.procurement_input_line = self._create_input_procurement_line() # полоса для ввода данных
+        self.table_obj = self._create_table() # объект таблица
+        self.additionally_information_obj = self._create_additionall_information()
+
+        self._init_window()
+
+    def _init_window(self):
+        def _location_table_window_on_screen(width, heigth):
+            "Вычисление центральной точки окна для объекта расположенного внутри этого окна"
+            center_screen_point = (int(self.screen_size[0]/2), int(self.screen_size[1]/2))
+            x = int(center_screen_point[0] - width/2)
+            y = int(center_screen_point[1] - heigth/2)
+            return x, y
+
+        width, heigth = self.procurement_table_window_size
+        start_point = _location_table_window_on_screen(width, heigth)
+        x, y = start_point
+        self.setGeometry(x, y, width, heigth)
+        self.setWindowTitle(config.PROCUREMENT_WINDOW_TEXT)
+        self.setWindowIcon(QIcon(config.PROCUREMENT_UPDATE_BTN))
+        self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint) # делаю не активной кнопку 'развернуть'
+
+    def _create_input_procurement_line(self):
         "Последовательно создаем элементы для ввода данных. Каждый новый элемент отталкивается от координат предыдущего элемента"
         start_point = (0, 0)
         window_width = self.procurement_table_window_size[0]
@@ -281,7 +283,10 @@ class QtProcurementTableWindow(QWidget):
         table_widget.move(0, self.current_heigth_input_line)
 
         db_connect = ProcurementDataBaseQuery()
+        new_table_if_not_exists = db_connect.create_table()
+        test_raw = db_connect.write_values_to_the_table()
         last_records = db_connect.show_last_records()
+
 
         for i, row in enumerate(last_records):
             add_row_in_table(row, i)
@@ -299,6 +304,7 @@ class QtProcurementTableWindow(QWidget):
         for i in range(0, config.TABLE_ROWS):
             table_widget.setRowHeight(i, self.current_heigth_input_line)
 
+        # скрываю имена колонок и нумерацию строк
         header = table_widget.horizontalHeader() # имена столбцов
         header.hide()
         rows_numbers = table_widget.verticalHeader() # нумерация строк
@@ -361,7 +367,6 @@ class QtProcurementTableWindow(QWidget):
         "Когда пользователь закрыл окно таблицы закупок"
         # self.main_window.start_animation.start()
         self.main_window.show()
-   
 
 class QtProcurementButtonsMenu(QWidget, QtButtonElements):
     "Кнопки которые использую для управления таблицей заказов"
@@ -371,9 +376,6 @@ class QtProcurementButtonsMenu(QWidget, QtButtonElements):
         self.screen_size = main_window.screen_size
 
         self._update = None # "скачать снова" данные с текущими настройками
-        self._change_min_row = None # выбрать минимальное количество строк
-        self._rewrite_data = None # записать данные с текущими настройками
-        self._main_menu = None # вернуться на главное меню без закрытия таблицы
 
         self._init_window()
 
