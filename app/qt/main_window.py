@@ -10,8 +10,8 @@ from qt.logic import MainButtonsClick
 
 class QtMainWindow(QWidget, QtButtonElements):
     def __init__(self, screen_width, screen_height):
-        logger.info('class QtMainWindow')
         super().__init__()
+        logger.info(f'class {self.__class__.__name__}')
         self.screen_size = (screen_width, screen_height)
 
         # отрисованные элементы

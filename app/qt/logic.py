@@ -7,7 +7,7 @@ import qt.procurement as qt_window
 class BackgroundLogic:
     "Действия которые происходят после нажатия на кнопки главного меню"
     def __init__(self) -> None:
-        logger.info('class AppLogic')
+        logger.info(f'class {self.__class__.__name__}')
         self._press_procurement = None # еще не нажимали на кнопку Закупки в главном меню
 
     @property
@@ -21,8 +21,8 @@ class BackgroundLogic:
 class MainButtonsClick(BackgroundLogic):
     "Здесь создаю объекты которые должны появиться после нажатия на кнопку главного меню"
     def __init__(self, main_window) -> None:
-        logger.info('class MainButtonsClick')
         super().__init__()
+        logger.info(f'class {self.__class__.__name__}')
         self.main_window = main_window
         self._procurement_form = None # таблица закупок
         self._procurement_btn_menu = None # меню кнопок для таблицы закупок

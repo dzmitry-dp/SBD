@@ -5,11 +5,11 @@ import db.config as db
 MAIN_MENU_BTN_SIZE = (100, 100)
 MAIN_WINDOW_SIZE = (MAIN_MENU_BTN_SIZE[0], 7 * MAIN_MENU_BTN_SIZE[1])
 
-ICO_DOC_BTN = './static/documents.png'
 ICO_PROJ_BTN = './static/project.png'
 ICO_ATTEND_BTN = './static/attendant.png'
 ICO_PROC_BTN = './static/procurement.png'
 ICO_CATEGORIES_BTN = './static/category.png'
+ICO_DOC_BTN = './static/documents.png'
 ICO_CUSTOM_BTN = './static/custom.png'
 ICO_EXIT_BTN = './static/exit.png'
 
@@ -72,7 +72,7 @@ TABLE_COLUMNS = len(db.table['col_ty'])
 DEPARTMENTS = [
     'None',
     'Бутафория',
-    'Декор', 
+    'Декор',
     'Столярка',
     'Мебель',
     'Стены',
@@ -115,4 +115,4 @@ UPDATE_BTN_SIZE = (100, 100)
 PROCURUMENT_MENU_WINDOW_SIZE = (UPDATE_BTN_SIZE[0], UPDATE_BTN_SIZE[1]*1)
 
 PROCUREMENT_WINDOW_TEXT = 'Закупки - A+props'
-PROCUREMENT_UPDATE_BTN = './static/update.png'
+ICO_UPDATE_BTN = './static/update.png'

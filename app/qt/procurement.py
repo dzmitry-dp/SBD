@@ -13,6 +13,7 @@ from db.procurement_query import ProcurementDataBaseQuery
 class TableWindowSize(QWidget):
     def __init__(self, main_window) -> None:
         super().__init__()
+        logger.info(f'class {self.__class__.__name__}')
         self.main_window = main_window
         self.screen_size = main_window.screen_size
         self.procurement_table_window_size = self._calculation_procurement_table_window_size()
@@ -30,8 +31,8 @@ class TableWindowSize(QWidget):
 class QtProcurementTableWindow(TableWindowSize):
     "Окно таблицы, которое появляется когда пользователь нажимает кнопку главного меню"
     def __init__(self, main_window) -> None:
-        logger.info('class QtTableWindow')
         super().__init__(main_window)
+        logger.info(f'class {self.__class__.__name__}')
         # создаем элементы интерфейса
         self.procurement_input_line = self._create_input_procurement_line() # полоса для ввода данных
         self.table_obj = self._create_table() # объект таблица
@@ -52,7 +53,7 @@ class QtProcurementTableWindow(TableWindowSize):
         x, y = start_point
         self.setGeometry(x, y, width, heigth)
         self.setWindowTitle(config.PROCUREMENT_WINDOW_TEXT)
-        self.setWindowIcon(QIcon(config.PROCUREMENT_UPDATE_BTN))
+        self.setWindowIcon(QIcon(config.ICO_UPDATE_BTN))
         self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint) # делаю не активной кнопку 'развернуть'
 
     def _create_input_procurement_line(self):
@@ -283,8 +284,6 @@ class QtProcurementTableWindow(TableWindowSize):
         table_widget.move(0, self.current_heigth_input_line)
 
         db_connect = ProcurementDataBaseQuery()
-        new_table_if_not_exists = db_connect.create_table()
-        test_raw = db_connect.write_values_to_the_table()
         last_records = db_connect.show_last_records()
 
 
@@ -372,6 +371,7 @@ class QtProcurementButtonsMenu(QWidget, QtButtonElements):
     "Кнопки которые использую для управления таблицей заказов"
     def __init__(self, main_window):
         super().__init__()
+        logger.info('class QtProcurementButtonsMenu')
         self.main_window = main_window
         self.screen_size = main_window.screen_size
 
@@ -386,7 +386,7 @@ class QtProcurementButtonsMenu(QWidget, QtButtonElements):
             for btn in self._update:
                 btn.resize(*config.UPDATE_BTN_SIZE)
                 btn.move(0, 0)
-            self._set_procurement_sheet_menu_btn(self._update, config.PROCUREMENT_UPDATE_BTN)
+            self._set_procurement_sheet_menu_btn(self._update, config.ICO_UPDATE_BTN)
         return self._update
 
     def _init_window(self):
